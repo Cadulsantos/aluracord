@@ -41,6 +41,8 @@ export default function PaginaInicial() {
   // const username = "cadulsantos";
   const [username, setUsername] = React.useState('');
   const roteamento = useRouter();
+  // var status = { disabled: false };
+  var [status, setStatus] = React.useState(false);
 
   return (
     <>
@@ -81,8 +83,13 @@ export default function PaginaInicial() {
             onSubmit={function(infosDoEvento){
               console.log("Alguém submeteu o Form");
               infosDoEvento.preventDefault();
-              // window.location.href = '/chat';
-              roteamento.push('/chat');
+              
+              //validação form
+              if(username.length <= 2)
+                setStatus(true);
+              else
+                roteamento.push('/chat');
+                // window.location.href = '/chat';
             }}
             styleSheet={{
               display: "flex",
@@ -121,6 +128,7 @@ export default function PaginaInicial() {
              /> */}
             <TextField
               value={username}
+              disabled = {status}
               onChange={function handler(event){
                 console.log(event)
                 console.log("usuario digitou" + event.target.value)
@@ -129,6 +137,7 @@ export default function PaginaInicial() {
                 //Trocar o valor da variável
                 //através do React e avise quem precisa
                 setUsername(valor);
+                
               }}
               fullWidth
               textFieldColors={{
@@ -155,40 +164,46 @@ export default function PaginaInicial() {
           {/* Formulário */}
 
           {/* Photo Area */}
-          <Box
-            styleSheet={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              maxWidth: "200px",
-              padding: "16px",
-              backgroundColor: appConfig.theme.colors.neutrals[800],
-              border: "1px solid",
-              borderColor: appConfig.theme.colors.neutrals[999],
-              borderRadius: "10px",
-              flex: 1,
-              minHeight: "240px",
-            }}
-          >
-            <Image
+
+          {
+              !status ?
+              <Box
               styleSheet={{
-                borderRadius: "50%",
-                marginBottom: "16px",
-              }}
-              src={`https://github.com/${username}.png`}
-            />
-            <Text
-              variant="body4"
-              styleSheet={{
-                color: appConfig.theme.colors.neutrals[200],
-                backgroundColor: appConfig.theme.colors.neutrals[900],
-                padding: "3px 10px",
-                borderRadius: "1000px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                maxWidth: "200px",
+                padding: "16px",
+                backgroundColor: appConfig.theme.colors.neutrals[800],
+                border: "1px solid",
+                borderColor: appConfig.theme.colors.neutrals[999],
+                borderRadius: "10px",
+                flex: 1,
+                minHeight: "240px",
               }}
             >
-              {username}
-            </Text>
-          </Box>
+              <Image
+                    
+                    // disabled = {status}
+                    styleSheet={{
+                      borderRadius: "50%",
+                      marginBottom: "16px",
+                    }}
+                    src={`https://github.com/${username}.png`}
+                  />
+              <Text
+                variant="body4"
+                styleSheet={{
+                  color: appConfig.theme.colors.neutrals[200],
+                  backgroundColor: appConfig.theme.colors.neutrals[900],
+                  padding: "3px 10px",
+                  borderRadius: "1000px",
+                }}>
+                {username}
+              </Text>
+            </Box>
+            : null
+            }
           {/* Photo Area */}
         </Box>
       </Box>
