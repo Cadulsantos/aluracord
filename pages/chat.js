@@ -1,6 +1,12 @@
-import { Box, Text, TextField, Image, Button } from "@skynexui/components";
+import { Box, Text, TextField, Image, Button, Icon } from "@skynexui/components";
+import { createClient } from "@supabase/supabase-js";
 import React from "react";
 import appConfig from "../config.json";
+
+const SUPABASE_ANON_KEY  ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzQwMTkzNCwiZXhwIjoxOTU4OTc3OTM0fQ.wLBQOOJ6yOLMCyrlNhX6G7SEUrJgTU1b5yaFvZZuN5M";
+const SUPABASE_URL = "https://vzgeisgpozhpmuibpbtf.supabase.co";
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 
 export default function ChatPage() {
   //Usuário
@@ -21,15 +27,43 @@ export default function ChatPage() {
   const [mensagem, setMensagem] = React.useState("");
   const [listaMensagens, setListaMensagens] = React.useState([]);
 
+  React.useEffect(()=>{
+    supabaseClient
+    .from('mensagens')
+    .select('*')
+    .order('id', {ascending: false})
+    .then(({ data })=>{
+      console.log('Dados :', data);
+      setListaMensagens(data);
+    });
+  }, []);
+  
+
   function handleNovaMensagem(novaMensagem) {
     const mensagem = {
-      id: listaMensagens.length + 1,
+      // id: listaMensagens.length + 1,
       de: "cadulsantos",
       texto: novaMensagem,
     };
-    setListaMensagens([mensagem, ...listaMensagens ]);
+
+    supabaseClient.from('mensagens')
+    .insert([
+      // Tem que ser um objeto com os MESMOS CAMPOS que você escreveu no supabase
+      mensagem
+    ])
+    .then(({data})=>{
+      setListaMensagens([
+          data[0],
+          ...listaMensagens 
+        ]);
+    });
+
+
+    // setListaMensagens([mensagem, ...listaMensagens ]);
     setMensagem("");
   }
+
+
 
   // ./Sua lógica vai aqui
 
@@ -74,7 +108,7 @@ export default function ChatPage() {
             padding: "16px",
           }}
         >
-          <MessageList mensagens={listaMensagens} />
+          <MessageList mensagens={listaMensagens} setMensagens={setListaMensagens} />
 
           {/* Lista de Mensagens: {listaMensagens.map((mensagemAtual)=>{
               return(
@@ -117,6 +151,20 @@ export default function ChatPage() {
                 color: appConfig.theme.colors.neutrals[200],
               }}
             />
+            <Button
+            onClick= {()=>{
+              handleNovaMensagem(mensagem);
+            }}
+               iconName="FaTelegramPlane"
+               size="sm"
+               buttonColors={{
+                contrastColor: appConfig.theme.colors.neutrals["000"],
+                mainColor: appConfig.theme.colors.primary[500],
+                mainColorLight: appConfig.theme.colors.primary[400],
+                mainColorStrong: appConfig.theme.colors.primary[600],
+              }}
+              
+            />
           </Box>
         </Box>
       </Box>
@@ -149,12 +197,26 @@ function Header() {
 }
 
 function MessageList(props) {
-  console.log("MessageList", props);
+  // console.log(props);
+  function handleRemoverMessagem(idMensagem){
+    supabaseClient
+    .from('mensagens')
+    .delete()
+    .match({id : idMensagem})
+    .then((retorno)=>{
+      if(retorno.status == 200)
+      {
+        var novasMensagens  = props.mensagens.filter(x => x.id !== idMensagem);
+        props.setMensagens(novasMensagens);
+      }
+    });
+  }
+
   return (
     <Box
       tag="ul"
       styleSheet={{
-        overflow: 'scroll',
+        overflow: 'auto',
         display: 'flex',
         flexDirection: 'column-reverse',
         flex: 1,
@@ -189,7 +251,7 @@ function MessageList(props) {
               display: "inline-block",
               marginRight: "8px",
             }}
-            src={`https://github.com/vanessametonini.png`}
+            src={`https://github.com/${mensagem.de}.png`}
           />
           <Text tag="strong">{mensagem.de}</Text>
           <Text
@@ -202,6 +264,26 @@ function MessageList(props) {
           >
             {new Date().toLocaleDateString()}
           </Text>
+          <Icon
+            name= "FaTrashAlt"
+            // type='button'
+           
+            styleSheet={{
+              color: appConfig.theme.colors.neutrals[200], 
+              display: "inline-block",
+              marginLeft: "95%",
+              width: "15px",
+              cursor: "pointer",
+              hover: {
+                color: 'red',
+              },
+            
+            }} 
+            onClick = {()=>{
+              handleRemoverMessagem(mensagem.id)
+              // console.log(mensagem.id);
+            }}
+          />
         </Box>
         {mensagem.texto}
       </Text>

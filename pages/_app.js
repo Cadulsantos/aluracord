@@ -3,12 +3,14 @@ function GlobalStyle() {
     return (
       <style global jsx>{`
         * {
+          
           margin: 0;
           padding: 0;
           box-sizing: border-box;
           list-style: none;
         }
         body {
+          
           font-family: "Open Sans", sans-serif;
         }
         /* App fit Height */
@@ -26,6 +28,21 @@ function GlobalStyle() {
           flex: 1;
         }
         /* ./App fit Height */
+
+        ::-webkit-scrollbar {
+          width: 0.3em;
+        }
+        
+        /* Track */
+        ::-webkit-scrollbar-track {
+          background: #313D49;
+        }
+        
+        /* Handle */
+        ::-webkit-scrollbar-thumb {
+          background: #CBD2D9;
+        }
+
       `}</style>
     );
   }
