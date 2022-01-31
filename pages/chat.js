@@ -1,12 +1,26 @@
 import { Box, Text, TextField, Image, Button, Icon } from "@skynexui/components";
 import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/router";
+import react from "react";
 import React from "react";
 import appConfig from "../config.json";
+import { ButtonSendSticker } from '../src/components/ButtonSendSticker'
 
-const SUPABASE_ANON_KEY  ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzQwMTkzNCwiZXhwIjoxOTU4OTc3OTM0fQ.wLBQOOJ6yOLMCyrlNhX6G7SEUrJgTU1b5yaFvZZuN5M";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzQwMTkzNCwiZXhwIjoxOTU4OTc3OTM0fQ.wLBQOOJ6yOLMCyrlNhX6G7SEUrJgTU1b5yaFvZZuN5M";
 const SUPABASE_URL = "https://vzgeisgpozhpmuibpbtf.supabase.co";
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+
+function escutaMensagensTempoReal(adicionaMensagem){
+return supabaseClient
+  .from('mensagens')
+  .on('INSERT', ( response ) => {
+    // console.log('Houve uma nova mensagem', response);
+    adicionaMensagem(response.new);
+  })
+  .subscribe();
+
+}
 
 export default function ChatPage() {
   //Usuário
@@ -24,40 +38,71 @@ export default function ChatPage() {
     */
 
   // Sua lógica vai aqui
+  const roteamento = useRouter();
+  const usuarioLogado = roteamento.query.username;
+  // console.log(usuarioLogado);
   const [mensagem, setMensagem] = React.useState("");
   const [listaMensagens, setListaMensagens] = React.useState([]);
 
-  React.useEffect(()=>{
+
+  react.useEffect
+
+  React.useEffect(() => {
     supabaseClient
-    .from('mensagens')
-    .select('*')
-    .order('id', {ascending: false})
-    .then(({ data })=>{
-      console.log('Dados :', data);
-      setListaMensagens(data);
-    });
+      .from('mensagens')
+      .select('*')
+      .order('id', { ascending: false })
+      .then(({ data }) => {
+        // console.log('Dados :', data);
+        setListaMensagens(data);
+      });
+
+      escutaMensagensTempoReal((novaMensagem) =>{
+        // console.log('Nova mensagem:', novaMensagem);
+
+        //Quero reusar um valor de referência (objeto/array)
+        //Passar uma funão pro setStage
+
+        // setListaMensagens([
+        //   novaMensagem,
+        //   ...listaMensagens
+        // ]);
+        setListaMensagens((valorAtualLista)=>{
+          return [
+            novaMensagem,
+            ...valorAtualLista
+          ];
+        });
+
+        
+      });
+
   }, []);
-  
+
 
   function handleNovaMensagem(novaMensagem) {
+
+    if (novaMensagem == null || novaMensagem.replace(' ', '') == '')
+      return;
+
     const mensagem = {
       // id: listaMensagens.length + 1,
-      de: "cadulsantos",
+      de: usuarioLogado,
       texto: novaMensagem,
     };
 
     supabaseClient.from('mensagens')
-    .insert([
-      // Tem que ser um objeto com os MESMOS CAMPOS que você escreveu no supabase
-      mensagem
-    ])
-    .then(({data})=>{
-      setListaMensagens([
-          data[0],
-          ...listaMensagens 
-        ]);
-    });
-
+      .insert([
+        // Tem que ser um objeto com os MESMOS CAMPOS que você escreveu no supabase
+        mensagem
+      ]).then();
+      // .then(({ data }) => {
+        // console.log('Criando mensagem:',data)
+        // setListaMensagens([
+        //   data[0],
+        //   ...listaMensagens
+        // ]);
+      // });
 
     // setListaMensagens([mensagem, ...listaMensagens ]);
     setMensagem("");
@@ -151,19 +196,27 @@ export default function ChatPage() {
                 color: appConfig.theme.colors.neutrals[200],
               }}
             />
+            {/* CallBack */}
+            <ButtonSendSticker
+              onStickerClick={(sticker) => {
+                // console.log('[USANDO O COMPONENTE] Salva esse sticker no banco' + sticker);
+
+                handleNovaMensagem(':sticker:' + sticker)
+              }} />
+
             <Button
-            onClick= {()=>{
-              handleNovaMensagem(mensagem);
-            }}
-               iconName="FaTelegramPlane"
-               size="sm"
-               buttonColors={{
+              onClick={() => {
+                handleNovaMensagem(mensagem);
+              }}
+              iconName="FaTelegramPlane"
+              size="sm"
+              buttonColors={{
                 contrastColor: appConfig.theme.colors.neutrals["000"],
                 mainColor: appConfig.theme.colors.primary[500],
                 mainColorLight: appConfig.theme.colors.primary[400],
                 mainColorStrong: appConfig.theme.colors.primary[600],
               }}
-              
+
             />
           </Box>
         </Box>
@@ -198,18 +251,17 @@ function Header() {
 
 function MessageList(props) {
   // console.log(props);
-  function handleRemoverMessagem(idMensagem){
+  function handleRemoverMessagem(idMensagem) {
     supabaseClient
-    .from('mensagens')
-    .delete()
-    .match({id : idMensagem})
-    .then((retorno)=>{
-      if(retorno.status == 200)
-      {
-        var novasMensagens  = props.mensagens.filter(x => x.id !== idMensagem);
-        props.setMensagens(novasMensagens);
-      }
-    });
+      .from('mensagens')
+      .delete()
+      .match({ id: idMensagem })
+      .then((retorno) => {
+        if (retorno.status == 200) {
+          var novasMensagens = props.mensagens.filter(x => x.id !== idMensagem);
+          props.setMensagens(novasMensagens);
+        }
+      });
   }
 
   return (
@@ -222,73 +274,79 @@ function MessageList(props) {
         flex: 1,
         color: appConfig.theme.colors.neutrals["000"],
         marginBottom: '16px',
-    }}
+      }}
     >
       {props.mensagens.map((mensagem) => {
-       return (
-        <Text
-        key={mensagem.id}
-        tag="li"
-        styleSheet={{
-          borderRadius: "5px",
-          padding: "6px",
-          marginBottom: "12px",
-          hover: {
-            backgroundColor: appConfig.theme.colors.neutrals[700],
-          },
-        }}
-      >
-        <Box
-          styleSheet={{
-            marginBottom: "8px",
-          }}
-        >
-          <Image
-            styleSheet={{
-              width: "20px",
-              height: "20px",
-              borderRadius: "50%",
-              display: "inline-block",
-              marginRight: "8px",
-            }}
-            src={`https://github.com/${mensagem.de}.png`}
-          />
-          <Text tag="strong">{mensagem.de}</Text>
+        return (
           <Text
+            key={mensagem.id}
+            tag="li"
             styleSheet={{
-              fontSize: "10px",
-              marginLeft: "8px",
-              color: appConfig.theme.colors.neutrals[300],
-            }}
-            tag="span"
-          >
-            {new Date().toLocaleDateString()}
-          </Text>
-          <Icon
-            name= "FaTrashAlt"
-            // type='button'
-           
-            styleSheet={{
-              color: appConfig.theme.colors.neutrals[200], 
-              display: "inline-block",
-              marginLeft: "95%",
-              width: "15px",
-              cursor: "pointer",
+              borderRadius: "5px",
+              padding: "6px",
+              marginBottom: "12px",
               hover: {
-                color: 'red',
+                backgroundColor: appConfig.theme.colors.neutrals[700],
               },
-            
-            }} 
-            onClick = {()=>{
-              handleRemoverMessagem(mensagem.id)
-              // console.log(mensagem.id);
             }}
-          />
-        </Box>
-        {mensagem.texto}
-      </Text>
+          >
+            <Box
+              styleSheet={{
+                marginBottom: "8px",
+              }}
+            >
+              <Image
+                styleSheet={{
+                  width: "20px",
+                  height: "20px",
+                  borderRadius: "50%",
+                  display: "inline-block",
+                  marginRight: "8px",
+                }}
+                src={`https://github.com/${mensagem.de}.png`}
+              />
+              <Text tag="strong">{mensagem.de}</Text>
+              <Text
+                styleSheet={{
+                  fontSize: "10px",
+                  marginLeft: "8px",
+                  color: appConfig.theme.colors.neutrals[300],
+                }}
+                tag="span"
+              >
+                {new Date().toLocaleDateString()}
+              </Text>
+              <Icon
+                name="FaTrashAlt"
+                // type='button'
 
-       );
+                styleSheet={{
+                  color: appConfig.theme.colors.neutrals[200],
+                  display: "inline-block",
+                  marginLeft: "95%",
+                  width: "15px",
+                  cursor: "pointer",
+                  hover: {
+                    color: 'red',
+                  },
+
+                }}
+                onClick={() => {
+                  handleRemoverMessagem(mensagem.id)
+                  // console.log(mensagem.id);
+                }}
+              />
+            </Box>
+            {mensagem.texto.startsWith(':sticker:') ? (
+              <Image src={mensagem.texto.replace(':sticker:', '')} />
+            )
+              : (
+                mensagem.texto
+              )}
+            {/* {mensagem.texto} */}
+          </Text>
+
+        );
       })}
     </Box>
   );

@@ -87,7 +87,7 @@ export default function PaginaInicial() {
               if(username.length <= 2)
                 setStatus(true);
               else
-                roteamento.push('/chat');
+                roteamento.push(`/chat/?username=${username}`);
                 // window.location.href = '/chat';
             }}
             styleSheet={{
