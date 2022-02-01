@@ -26,10 +26,12 @@ export function ButtonSendSticker(props) {
           backgroundColor: appConfig.theme.colors.neutrals[300],
           filter: isOpen ? 'grayscale(0)' : 'grayscale(1)',
           hover: {
+            backgroundColor : "#1F3B73",
             filter: 'grayscale(0)',
           }
+          
         }}
-        label="😋"
+        label="🚀"
         onClick={() => setOpenState(!isOpen)}
       />
       {isOpen && (

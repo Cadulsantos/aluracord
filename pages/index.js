@@ -6,7 +6,6 @@ import { useRouter } from 'next/router';
 
 
 function Titulo(props) {
-  console.log(props);
   const Tag = props.tag || "h1";
   return (
     <>
@@ -14,7 +13,7 @@ function Titulo(props) {
       <style jsx>
         {`
           ${Tag} {
-            color: ${appConfig.theme.colors.neutrals["999"]};
+            color: ${appConfig.theme.colors.neutrals["100"]};
             font-size: 24px;
             font-weight: 600;
           }
@@ -38,10 +37,25 @@ function Titulo(props) {
 //   export default HomePage
 
 export default function PaginaInicial() {
-  // const username = "cadulsantos";
-  const [username, setUsername] = React.useState('cadulsantos');
+  const [github, setGithub] = React.useState('');
+  const [username, setUsername] = React.useState('');
   const roteamento = useRouter();
+  const image = 'https://img.freepik.com/vetores-gratis/astronauta-bonito-trabalhando-na-ilustracao-de-icone-de-vetor-de-desenho-animado-laptop-conceito-de-icone-de-tecnologia-de-ciencia-vetor-premium-isolado-estilo-flat-cartoon_138676-3332.jpg?size=338&ext=jpg';
   var [status, setStatus] = React.useState(false);
+
+  React.useEffect(() => {
+    fetch(`https://api.github.com/users/${username}`)
+      .then((response) => {
+        return response.json();
+      })
+      .then((result) => {
+        setGithub(result);
+        console.log(result);
+      })
+      .catch((err) => {
+        console.log(err.message);
+      })
+  }, [username]);
 
   return (
     <>
@@ -50,9 +64,9 @@ export default function PaginaInicial() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: appConfig.theme.colors.primary[500],
+          backgroundColor: appConfig.theme.colors.primary[900],
           backgroundImage:
-            "url(https://virtualbackgrounds.site/wp-content/uploads/2020/08/the-matrix-digital-rain.jpg)",
+            `url(${appConfig.backGroundImg})`,
           backgroundRepeat: "no-repeat",
           backgroundSize: "cover",
           backgroundBlendMode: "multiply",
@@ -69,26 +83,31 @@ export default function PaginaInicial() {
             },
             width: "100%",
             maxWidth: "700px",
-            borderRadius: "5px",
             padding: "32px",
             margin: "16px",
-            boxShadow: "0 2px 10px 0 rgb(0 0 0 / 20%)",
-            backgroundColor: appConfig.theme.colors.neutrals[700],
+            backgroundColor: "rgba(0, 0, 0, 0.63)",
+            border: "1px solid rgba(0, 0, 0, 0.88)",
+            borderColor: appConfig.theme.colors.neutrals[999],
+            borderRadius: "16px",
+            flex: 1,
+            minHeight: "240px",
+            boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
+            backdropFilter: "blur(2.6px)",
+            webkitBackdropFilter: "blur(2.6px)",
           }}
         >
+
           {/* Formulário */}
           <Box
             as="form"
-            onSubmit={function(infosDoEvento){
-              console.log("Alguém submeteu o Form");
+            onSubmit={function (infosDoEvento) {
+
+              if (!status)
+                return;
+
               infosDoEvento.preventDefault();
-              
-              //validação form
-              if(username.length <= 2)
-                setStatus(true);
-              else
-                roteamento.push(`/chat/?username=${username}`);
-                // window.location.href = '/chat';
+              roteamento.push(`/chat/?username=${username}`);
+              // window.location.href = '/chat';
             }}
             styleSheet={{
               display: "flex",
@@ -101,7 +120,7 @@ export default function PaginaInicial() {
             }}
           >
             <Titulo tag="h2">Boas vindas de volta!</Titulo>
-            
+
 
             <Text
               variant="body3"
@@ -113,30 +132,22 @@ export default function PaginaInicial() {
               {appConfig.name}
             </Text>
 
-            {/* <input type={"text"}
-             value={username}
-             onChange={function handler(event){
-              console.log(event)
-               console.log("usuario digitou" + event.target.value)
-               //Onde ta o valor?
-               const valor = event.target.value;
-               //Trocar o valor da variável
-               //através do React e avise quem precisa
-               setUsername(valor);
-             }}
-             /> */}
             <TextField
               value={username}
-              disabled = {status}
-              onChange={function handler(event){
-                console.log(event)
-                console.log("usuario digitou" + event.target.value)
+              placeholder="Informe o seu usuário do Github"
+              onChange={function handler(event) {
+                // console.log("usuario digitou" + event.target.value)
                 //Onde ta o valor?
                 const valor = event.target.value;
                 //Trocar o valor da variável
                 //através do React e avise quem precisa
                 setUsername(valor);
-                
+
+                //Validação de quantidade de caracteres
+                if (valor.length > 1)
+                  setStatus(true);
+                else
+                  setStatus(false);
               }}
               fullWidth
               textFieldColors={{
@@ -156,7 +167,7 @@ export default function PaginaInicial() {
                 contrastColor: appConfig.theme.colors.neutrals["000"],
                 mainColor: appConfig.theme.colors.primary[500],
                 mainColorLight: appConfig.theme.colors.primary[400],
-                mainColorStrong: appConfig.theme.colors.primary[600],
+                mainColorStrong: appConfig.theme.colors.primary[500],
               }}
             />
           </Box>
@@ -164,45 +175,60 @@ export default function PaginaInicial() {
 
           {/* Photo Area */}
 
-          {
-              !status ?
-              <Box
+          <Box
+            styleSheet={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              maxWidth: "200px",
+              padding: "16px",
+              backgroundColor: "rgba(0, 0, 0, 0.23)",
+              border: "1px solid rgba(0, 0, 0, 0.88)",
+              borderColor: appConfig.theme.colors.neutrals[999],
+              borderRadius: "16px",
+              flex: 1,
+              minHeight: "240px",
+              boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
+              backdropFilter: "blur(4.7px)",
+              webkitBackdropFilter: "blur(4.7px)",
+            }}
+          >
+            <Image
               styleSheet={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                maxWidth: "200px",
-                padding: "16px",
-                backgroundColor: appConfig.theme.colors.neutrals[800],
-                border: "1px solid",
-                borderColor: appConfig.theme.colors.neutrals[999],
-                borderRadius: "10px",
-                flex: 1,
-                minHeight: "240px",
+                borderRadius: "50%",
+                marginBottom: "16px",
+              }}
+              src={status === true
+                ? `https://github.com/${username}.png`
+                : image
+              }
+            />
+
+            <Text
+              variant="body4"
+              styleSheet={{
+                color: appConfig.theme.colors.neutrals[200],
+                backgroundColor: appConfig.theme.colors.neutrals[900],
+                padding: "3px 10px",
+                borderRadius: "1000px",
+              }}>
+              {/* { status ? github.name : "" } */}
+              {status ? username : ""}
+            </Text>
+
+            <Text
+              variant="body4"
+              styleSheet={{
+                color: appConfig.theme.colors.neutrals["200"],
+                padding: "3px 10px",
+                borderRadius: "1000px",
+                marginTop: "8px",
               }}
             >
-              <Image
-                    
-                    // disabled = {status}
-                    styleSheet={{
-                      borderRadius: "50%",
-                      marginBottom: "16px",
-                    }}
-                    src={`https://github.com/${username}.png`}
-                  />
-              <Text
-                variant="body4"
-                styleSheet={{
-                  color: appConfig.theme.colors.neutrals[200],
-                  backgroundColor: appConfig.theme.colors.neutrals[900],
-                  padding: "3px 10px",
-                  borderRadius: "1000px",
-                }}>
-                {username}
-              </Text>
-            </Box>
-            : null
-            }
+              {status ? `Followers: ${github.followers}` : ""}
+            </Text>
+          </Box>
+
           {/* Photo Area */}
         </Box>
       </Box>
